@@ -11,11 +11,11 @@
 #define HIGHKEYNAMELENGTH 32
 #define HIGHDELIMS 2
 
-#define RCT2REGKEYNAME "Software\\Infogrames"\
-	"\\RollerCoaster Tycoon 2 Setup"
+#define RCT2REGKEYNAME                                                                                                         \
+    "Software\\Infogrames"                                                                                                     \
+    "\\RollerCoaster Tycoon 2 Setup"
 #define RCT2REGVALUENAME "Path"
 
-int GetRct2Path(BYTE *path);
+int GetRct2Path(BYTE * path);
 
 #endif //_RCT2_
-

@@ -1,27 +1,28 @@
-#include "../rct2.h"
-#include "parkstatus.h"
-#include "../process/process.h"
-#include "../8cars.h"
 #include <stdtypes.h>
-#include "../ridefuncs/ridefuncs.h"
+#include "../8cars.h"
 #include "../mapfuncs/mapfuncs.h"
+#include "../process/process.h"
+#include "../rct2.h"
+#include "../ridefuncs/ridefuncs.h"
+#include "parkstatus.h"
 
-WORD CompressAbsMonth(WORD month,WORD year)
-{	WORD absmonth;
-	__asm
-	{	mov ax,[month]
+WORD CompressAbsMonth(WORD month, WORD year)
+{
+    WORD absmonth;
+    __asm
+    {	mov ax,[month]
 		mov dx,[year]
 		shl dx,3
 		and ax,7
 		or ax,dx
 		mov [absmonth],ax
-	}
-	return absmonth;
+    }
+    return absmonth;
 }
-WORD ExtractAbsMonth(WORD *month,WORD *year,WORD absmonth)
-{	
-	__asm
-	{	
+WORD ExtractAbsMonth(WORD * month, WORD * year, WORD absmonth)
+{
+    __asm
+    {	
 		mov ax,[absmonth]
 		mov dx,ax
 		shr dx,3
@@ -30,116 +31,98 @@ WORD ExtractAbsMonth(WORD *month,WORD *year,WORD absmonth)
 		mov [edi],ax
 		mov edi,[year]
 		mov [edi],dx
-	}
-	return month;
+    }
+    return month;
 }
 
+int IncDate(short dayInc, short monthInc, short yearInc)
+{
+    short day, month, year;
 
-int IncDate(short dayInc,short monthInc,short yearInc)
-{	
-	short 
-		day,month,year;
+    GetDate(&day, &month, &year);
 
-	GetDate(&day,&month,&year);
+    day += dayInc;
+    if (day < 0)
+        --month;
+    month = month + (day / RCT2_DAYSPERMONTH);
+    day %= RCT2_DAYSPERMONTH;
+    if (day < 0)
+        day += RCT2_DAYSPERMONTH;
 
-	day+=dayInc;
-	if(day<0)
-		--month;
-	month=month+(day/RCT2_DAYSPERMONTH);
-	day%=RCT2_DAYSPERMONTH;
-	if(day<0)
-		day+=RCT2_DAYSPERMONTH;
+    month += monthInc;
+    if (month < 0)
+        --year;
+    year = year + (month / RCT2_MONTHSPERYEAR);
+    month %= RCT2_MONTHSPERYEAR;
 
-	month+=monthInc;
-	if(month<0)
-		--year;
-	year=year+(month/RCT2_MONTHSPERYEAR);
-	month%=RCT2_MONTHSPERYEAR;
-
-	year+=yearInc;
-	SetDate(day,month,year);
+    year += yearInc;
+    SetDate(day, month, year);
 }
 
-int SetDate(short day,short month,short year)
-{	
-	DATESTRUCT date;
+int SetDate(short day, short month, short year)
+{
+    DATESTRUCT date;
 
-	date.absmonth=CompressAbsMonth(month,year);
-	
-	date.day=day*RCT2_UNITSPERDAY;
-	
-	WinWrite(mainWindow,RCT2_TITLE,RCT2_ADDR_ABSMONTH,&date,sizeof(date));	
+    date.absmonth = CompressAbsMonth(month, year);
+
+    date.day = day * RCT2_UNITSPERDAY;
+
+    WinWrite(mainWindow, RCT2_TITLE, RCT2_ADDR_ABSMONTH, &date, sizeof(date));
 }
 
-int GetDate(short *day,short *month,short *year)
-{	
-	DATESTRUCT date;	
-	
-	WinRead(mainWindow,RCT2_TITLE,&date,RCT2_ADDR_ABSMONTH,sizeof(date));
+int GetDate(short * day, short * month, short * year)
+{
+    DATESTRUCT date;
 
-	ExtractAbsMonth(month,year,date.absmonth);
-	
-	*day=date.day/RCT2_UNITSPERDAY;
+    WinRead(mainWindow, RCT2_TITLE, &date, RCT2_ADDR_ABSMONTH, sizeof(date));
+
+    ExtractAbsMonth(month, year, date.absmonth);
+
+    *day = date.day / RCT2_UNITSPERDAY;
 }
 
 int SetCurrentAttendance(WORD attendance)
 {
-	WinWrite
-	(	mainWindow,RCT2_TITLE,RCT2_ADDR_NUMGUESTSINPARK,
-		&attendance,sizeof(attendance)
-	);
+    WinWrite(mainWindow, RCT2_TITLE, RCT2_ADDR_NUMGUESTSINPARK, &attendance, sizeof(attendance));
 }
 
 WORD GetCurrentAttendance()
 {
-	WORD attendance;
+    WORD attendance;
 
-	WinRead
-	(	mainWindow,RCT2_TITLE,&attendance,
-		RCT2_ADDR_NUMGUESTSINPARK,sizeof(attendance)
-	);
-	return attendance;
+    WinRead(mainWindow, RCT2_TITLE, &attendance, RCT2_ADDR_NUMGUESTSINPARK, sizeof(attendance));
+    return attendance;
 }
 
 //-- Count Objects --
 
-DisplayCount(char *objectTypeString,DWORD curCount,DWORD maxCount)
+DisplayCount(char * objectTypeString, DWORD curCount, DWORD maxCount)
 {
-	#define DISPLAYFORMAT "There are %d %s data structures in your park; there is a max of %d.  You have %d left to use"
-	char displayString[256];
+#define DISPLAYFORMAT "There are %d %s data structures in your park; there is a max of %d.  You have %d left to use"
+    char displayString[256];
 
-	sprintf(displayString,DISPLAYFORMAT,curCount,objectTypeString,maxCount,maxCount-curCount);
-	MessageBox(mainWindow,displayString,"Message",MB_OK);
+    sprintf(displayString, DISPLAYFORMAT, curCount, objectTypeString, maxCount, maxCount - curCount);
+    MessageBox(mainWindow, displayString, "Message", MB_OK);
 }
 
 CountRides()
 {
-	#define MAXRIDES 255
-	DisplayCount("ride",GetRideCount(),MAXRIDES);
+#define MAXRIDES 255
+    DisplayCount("ride", GetRideCount(), MAXRIDES);
 }
 
 CountMapData()
 {
-	DisplayCount("map",GetUsedMapDataStructCount(),MAPDATASTRUCTURES_MAX);
+    DisplayCount("map", GetUsedMapDataStructCount(), MAPDATASTRUCTURES_MAX);
 }
 
 CountSprites()
 {
-	SPRITESTATS spritestats;
+    SPRITESTATS spritestats;
 
-	memset(&spritestats,0,sizeof(spritestats));
-	//	NUMSPRITES 
-	WinRead
-	(	mainWindow,
-		RCT2_TITLE,&spritestats,RCT2_ADDR_SPRITESTATS,
-		sizeof(SPRITESTATS)
-	);
+    memset(&spritestats, 0, sizeof(spritestats));
+    //	NUMSPRITES
+    WinRead(mainWindow, RCT2_TITLE, &spritestats, RCT2_ADDR_SPRITESTATS, sizeof(SPRITESTATS));
 
-	DisplayCount("sprite",(DWORD)NUMSPRITES-spritestats.statsA.availSprites,NUMSPRITES);
+    DisplayCount("sprite", (DWORD)NUMSPRITES - spritestats.statsA.availSprites, NUMSPRITES);
 }
-
-
-
-
-
-

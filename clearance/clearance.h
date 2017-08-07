@@ -1,7 +1,7 @@
-//clearance.h
+// clearance.h
 
 #include "../rct2.h"
 
 short GetElementClearance(LPPARKMAPDATA MapData);
 
-#define STATIC_PATH_CLEARANCE		4
+#define STATIC_PATH_CLEARANCE 4
