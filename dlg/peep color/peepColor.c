@@ -2,7 +2,7 @@
 #include <stdlib2.h>
 #include <windows.h>
 #include "../../resource.h"
-#include "../../spritefuncs/spritefuncs.h" "
+#include "../../spritefuncs/spritefuncs.h"
 #include "peepColor.h"
 
 #define RGB_BLACK (RGB(0, 0, 0))
